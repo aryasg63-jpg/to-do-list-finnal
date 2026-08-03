@@ -11,4 +11,3 @@ workflows:
 
     artifacts:
       - app/build/outputs/apk/debug/*.apk
-      

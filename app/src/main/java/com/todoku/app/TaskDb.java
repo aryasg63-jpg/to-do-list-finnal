@@ -15,7 +15,7 @@ import java.util.List;
 public class TaskDb extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "todoku.db";
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 3;
     private static final String TBL = "tasks";
     private static final String TBL_HIST = "task_history";
 
@@ -62,14 +62,17 @@ public class TaskDb extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldV, int newV) {
-        if (oldV < 2) {
-            // Tambah kolom baru TANPA menghapus data lama user
-            try { db.execSQL("ALTER TABLE " + TBL + " ADD COLUMN note TEXT DEFAULT ''"); } catch (Exception ignored) {}
-            try { db.execSQL("ALTER TABLE " + TBL + " ADD COLUMN repeatType TEXT DEFAULT 'none'"); } catch (Exception ignored) {}
-            try { db.execSQL("ALTER TABLE " + TBL + " ADD COLUMN repeatInterval INTEGER DEFAULT 1"); } catch (Exception ignored) {}
-            try { db.execSQL("ALTER TABLE " + TBL + " ADD COLUMN repeatWeekdays INTEGER DEFAULT 0"); } catch (Exception ignored) {}
-            createHistoryTable(db);
-        }
+        // Perbaiki skema DB dari versi lama / DB "rusak" tanpa menghapus data user.
+        // Setiap perintah dibuat idempotent + try/catch agar upgrade tidak pernah crash.
+        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN note TEXT DEFAULT ''");
+        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN repeatType TEXT DEFAULT 'none'");
+        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN repeatInterval INTEGER DEFAULT 1");
+        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN repeatWeekdays INTEGER DEFAULT 0");
+        try { createHistoryTable(db); } catch (Exception ignored) { }
+    }
+
+    private static void upgradeTable(SQLiteDatabase db, String sql) {
+        try { db.execSQL(sql); } catch (Exception ignored) { }
     }
 
     // ================= CRUD tugas =================
@@ -283,29 +286,49 @@ public class TaskDb extends SQLiteOpenHelper {
 
     private Task fromCursor(Cursor c) {
         Task t = new Task();
-        t.id = c.getLong(c.getColumnIndexOrThrow("id"));
-        t.title = c.getString(c.getColumnIndexOrThrow("title"));
-        t.category = c.getString(c.getColumnIndexOrThrow("category"));
-        t.startTimeMillis = c.getLong(c.getColumnIndexOrThrow("startTimeMillis"));
-        t.prepMinutesBefore = c.getInt(c.getColumnIndexOrThrow("prepMinutesBefore"));
-        t.alarmEnabled = c.getInt(c.getColumnIndexOrThrow("alarmEnabled")) == 1;
-        t.prepAlarmEnabled = c.getInt(c.getColumnIndexOrThrow("prepAlarmEnabled")) == 1;
-        t.soundUri = c.getString(c.getColumnIndexOrThrow("soundUri"));
-        t.done = c.getInt(c.getColumnIndexOrThrow("done")) == 1;
-        t.estimatedMinutes = c.getInt(c.getColumnIndexOrThrow("estimatedMinutes"));
+        t.id = getLong(c, "id");
+        t.title = getStr(c, "title");
+        t.category = getStr(c, "category");
+        t.startTimeMillis = getLong(c, "startTimeMillis");
+        t.prepMinutesBefore = getInt(c, "prepMinutesBefore");
+        t.alarmEnabled = getInt(c, "alarmEnabled") == 1;
+        t.prepAlarmEnabled = getInt(c, "prepAlarmEnabled") == 1;
+        t.soundUri = getStr(c, "soundUri");
+        if (t.soundUri != null && t.soundUri.isEmpty()) t.soundUri = null;
+        t.done = getInt(c, "done") == 1;
+        t.estimatedMinutes = getInt(c, "estimatedMinutes");
         t.note = getStr(c, "note");
         t.repeatType = getStr(c, "repeatType");
-        t.repeatInterval = c.getInt(c.getColumnIndexOrThrow("repeatInterval"));
-        t.repeatWeekdays = c.getInt(c.getColumnIndexOrThrow("repeatWeekdays"));
+        t.repeatInterval = getInt(c, "repeatInterval");
+        t.repeatWeekdays = getInt(c, "repeatWeekdays");
         return t;
     }
 
     private static String getStr(Cursor c, String col) {
         try {
             int idx = c.getColumnIndexOrThrow(col);
-            return c.getString(idx) == null ? "" : c.getString(idx);
+            String v = c.getString(idx);
+            return v == null ? "" : v;
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    private static int getInt(Cursor c, String col) {
+        try {
+            int idx = c.getColumnIndexOrThrow(col);
+            return c.getInt(idx);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private static long getLong(Cursor c, String col) {
+        try {
+            int idx = c.getColumnIndexOrThrow(col);
+            return c.getLong(idx);
+        } catch (Exception e) {
+            return 0;
         }
     }
 }
