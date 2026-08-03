@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_screen">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:paddingBottom="110dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚙️ Setelan"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <LinearLayout style="@style/settings_row">
+            <ImageView
+                android:layout_width="24dp" android:layout_height="24dp"
+                android:src="@drawable/ic_moon" app:tint="@color/purple_primary" />
+            <TextView style="@style/settings_label" android:text="Mode gelap" />
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swDarkMode"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/settings_row">
+            <ImageView
+                android:layout_width="24dp" android:layout_height="24dp"
+                android:src="@drawable/ic_bell" app:tint="@color/purple_primary" />
+            <TextView style="@style/settings_label" android:text="Alarm presisi (izin sistem)" />
+            <Button
+                android:id="@+id/btnExactAlarm"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Buka" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/settings_row">
+            <ImageView
+                android:layout_width="24dp" android:layout_height="24dp"
+                android:src="@drawable/ic_sun" app:tint="@color/purple_primary" />
+            <TextView style="@style/settings_label" android:text="Baterai: jangan hemat app ini" />
+            <Button
+                android:id="@+id/btnBatteryOpt"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Atur" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/settings_row">
+            <ImageView
+                android:layout_width="24dp" android:layout_height="24dp"
+                android:src="@drawable/ic_backup" app:tint="@color/purple_primary" />
+            <TextView style="@style/settings_label" android:text="Backup data ke file" />
+            <Button
+                android:id="@+id/btnBackup"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Ekspor" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/settings_row">
+            <ImageView
+                android:layout_width="24dp" android:layout_height="24dp"
+                android:src="@drawable/ic_restore" app:tint="@color/purple_primary" />
+            <TextView style="@style/settings_label" android:text="Pulihkan dari file backup" />
+            <Button
+                android:id="@+id/btnRestore"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Impor" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/settings_row">
+            <ImageView
+                android:layout_width="24dp" android:layout_height="24dp"
+                android:src="@drawable/ic_delete" app:tint="#FF6B6B" />
+            <TextView style="@style/settings_label" android:text="Hapus semua data (tidak bisa dibatalkan)" />
+            <Button
+                android:id="@+id/btnWipe"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Hapus" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvAbout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:paddingTop="18dp"
+            android:lineSpacingExtra="3dp"
+            android:text="TodoKu Alarm v2.0\nTodo + alarm pengingat harian, mingguan, bulanan & tahunan.\nSemua data tersimpan lokal di HP Anda." />
+
+    </LinearLayout>
+</ScrollView>
