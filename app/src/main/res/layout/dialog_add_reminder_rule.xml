@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView style="@style/LabelText" android:text="Ingatkan berapa hari sebelum waktu mulai?" />
+    <Spinner
+        android:id="@+id/spDaysBefore"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp" />
+
+    <TextView style="@style/LabelText" android:text="Ulangi berapa kali?" />
+    <Spinner
+        android:id="@+id/spRepeatCount"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp" />
+
+    <TextView
+        android:id="@+id/tvIntervalLabel"
+        style="@style/LabelText"
+        android:text="Jarak tiap pengulangan" />
+    <Spinner
+        android:id="@+id/spIntervalHours"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp" />
+
+    <TextView style="@style/LabelText" android:text="Catatan (opsional)" />
+    <EditText
+        android:id="@+id/etReminderLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Contoh: Cicil belajar!"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="18dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnRuleCancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Batal"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnRuleSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tambahkan"
+            android:backgroundTint="#6C5CE7"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</LinearLayout>

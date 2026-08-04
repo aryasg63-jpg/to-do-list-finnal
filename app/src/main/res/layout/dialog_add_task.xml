@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView style="@style/LabelText" android:text="Nama Kegiatan" />
+    <EditText
+        android:id="@+id/etTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Contoh: Lari pagi 30 menit"
+        android:inputType="text"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp" />
+
+    <TextView style="@style/LabelText" android:text="Kategori" />
+    <Spinner
+        android:id="@+id/spCategory"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp" />
+
+    <TextView style="@style/LabelText" android:text="Prioritas" />
+    <RadioGroup
+        android:id="@+id/rgPriority"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp">
+
+        <RadioButton android:id="@+id/rbLow" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="🟢 Rendah" android:textSize="12.5sp" />
+        <RadioButton android:id="@+id/rbMedium" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="🟡 Sedang" android:textSize="12.5sp" android:checked="true" />
+        <RadioButton android:id="@+id/rbHigh" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="🔴 Tinggi" android:textSize="12.5sp" />
+    </RadioGroup>
+
+    <View style="@style/Divider" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="14dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🔁 Ulangi kegiatan ini"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Switch
+            android:id="@+id/switchRecurring"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- Mode SEKALI JALAN: perlu tanggal spesifik -->
+    <LinearLayout
+        android:id="@+id/layoutOneTimeDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="12dp">
+
+        <TextView style="@style/LabelText" android:text="Tanggal" />
+        <Button
+            android:id="@+id/btnPickDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📅 Pilih tanggal"
+            android:layout_marginTop="4dp"
+            style="?android:attr/buttonStyleSmall" />
+    </LinearLayout>
+
+    <!-- Mode BERULANG: pilih harian/mingguan + hari -->
+    <LinearLayout
+        android:id="@+id/layoutRecurringOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="12dp"
+        android:visibility="gone">
+
+        <TextView style="@style/LabelText" android:text="Pola pengulangan" />
+        <RadioGroup
+            android:id="@+id/rgRecurrenceType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <RadioButton android:id="@+id/rbDaily" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Harian" android:checked="true" />
+            <RadioButton android:id="@+id/rbWeekly" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Mingguan" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/layoutDayPicker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp"
+            android:weightSum="7"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <TextView style="@style/LabelText" android:text="Jam" android:layout_marginTop="14dp" />
+    <Button
+        android:id="@+id/btnPickStartTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🕐 Pilih jam mulai"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp"
+        style="?android:attr/buttonStyleSmall" />
+
+    <TextView style="@style/LabelText" android:text="Estimasi durasi pengerjaan (menit)" />
+    <EditText
+        android:id="@+id/etDuration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Contoh: 30"
+        android:inputType="number"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp" />
+
+    <View style="@style/Divider" />
+
+    <CheckBox
+        android:id="@+id/cbPrepAlarm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Aktifkan pengingat BERSIAP-SIAP"
+        android:checked="true"
+        android:layout_marginTop="14dp" />
+
+    <TextView style="@style/LabelText" android:text="Ingatkan berapa menit sebelum mulai?" android:layout_marginTop="8dp" />
+    <Spinner
+        android:id="@+id/spPrepMinutes"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="14dp" />
+
+    <CheckBox
+        android:id="@+id/cbStartAlarm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Aktifkan alarm WAKTU MULAI"
+        android:checked="true"
+        android:layout_marginBottom="14dp" />
+
+    <View style="@style/Divider" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="14dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="⏳ Pengingat Custom (H-1 s/d H-10)"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Buat pengingat tambahan sebelum deadline, bisa berulang beberapa kali (mis. tiap hari mulai H-5)."
+        android:textSize="11.5sp"
+        android:textColor="#8B8B9E"
+        android:layout_marginTop="2dp" />
+
+    <LinearLayout
+        android:id="@+id/layoutReminderRules"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btnAddReminderRule"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="+ Tambah Pengingat Custom"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="14dp"
+        style="?android:attr/buttonStyleSmall" />
+
+    <View style="@style/Divider" />
+
+    <TextView style="@style/LabelText" android:text="Suara Alarm" android:layout_marginTop="14dp" />
+    <Button
+        android:id="@+id/btnPickSound"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🎵 Pilih file audio (.mp3 / .opus) dari HP"
+        android:layout_marginTop="4dp"
+        style="?android:attr/buttonStyleSmall" />
+
+    <TextView
+        android:id="@+id/tvSelectedSound"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Belum ada file dipilih — akan pakai nada alarm default"
+        android:textSize="12sp"
+        android:textColor="#8B8B9E"
+        android:layout_marginTop="6dp" />
+
+    <Button
+        android:id="@+id/btnPreviewSound"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="▶ Coba dengarkan"
+        android:layout_marginTop="6dp"
+        android:visibility="gone"
+        style="?android:attr/buttonStyleSmall" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="24dp">
+
+        <Button
+            android:id="@+id/btnDeleteTask"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hapus"
+            android:textColor="#FF5252"
+            android:visibility="gone"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Batal"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Simpan"
+            android:backgroundTint="#6C5CE7"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+</LinearLayout>
+</ScrollView>

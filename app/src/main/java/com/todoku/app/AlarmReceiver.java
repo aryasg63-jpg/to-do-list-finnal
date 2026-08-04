@@ -15,9 +15,10 @@ public class AlarmReceiver extends BroadcastReceiver {
         String title = intent.getStringExtra(AlarmScheduler.EXTRA_TITLE);
         String category = intent.getStringExtra(AlarmScheduler.EXTRA_CATEGORY);
         String soundUri = intent.getStringExtra(AlarmScheduler.EXTRA_SOUND_URI);
-        String note = intent.getStringExtra(AlarmScheduler.EXTRA_NOTE);
         boolean isPrep = intent.getBooleanExtra(AlarmScheduler.EXTRA_IS_PREP, false);
-        boolean isRepeat = intent.getBooleanExtra(AlarmScheduler.EXTRA_IS_REPEAT, false);
+        boolean isCustomReminder = intent.getBooleanExtra(AlarmScheduler.EXTRA_IS_CUSTOM_REMINDER, false);
+        String reminderLabel = intent.getStringExtra(AlarmScheduler.EXTRA_REMINDER_LABEL);
+        int reminderIndex = intent.getIntExtra(AlarmScheduler.EXTRA_REMINDER_INDEX, 1);
 
         // Mulai service pemutar suara (foreground, tahan lama, custom mp3/opus)
         Intent svc = new Intent(ctx, AlarmSoundService.class);
@@ -25,6 +26,8 @@ public class AlarmReceiver extends BroadcastReceiver {
         svc.putExtra(AlarmScheduler.EXTRA_TITLE, title);
         svc.putExtra(AlarmScheduler.EXTRA_SOUND_URI, soundUri);
         svc.putExtra(AlarmScheduler.EXTRA_IS_PREP, isPrep);
+        svc.putExtra(AlarmScheduler.EXTRA_IS_CUSTOM_REMINDER, isCustomReminder);
+        svc.putExtra(AlarmScheduler.EXTRA_REMINDER_LABEL, reminderLabel);
         ctx.startForegroundService(svc);
 
         // Buka layar alarm full-screen (muncul walau HP terkunci)
@@ -33,8 +36,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         ring.putExtra(AlarmScheduler.EXTRA_TITLE, title);
         ring.putExtra(AlarmScheduler.EXTRA_CATEGORY, category);
         ring.putExtra(AlarmScheduler.EXTRA_IS_PREP, isPrep);
-        ring.putExtra(AlarmScheduler.EXTRA_IS_REPEAT, isRepeat);
-        ring.putExtra(AlarmScheduler.EXTRA_NOTE, note);
+        ring.putExtra(AlarmScheduler.EXTRA_IS_CUSTOM_REMINDER, isCustomReminder);
+        ring.putExtra(AlarmScheduler.EXTRA_REMINDER_LABEL, reminderLabel);
+        ring.putExtra(AlarmScheduler.EXTRA_REMINDER_INDEX, reminderIndex);
         ring.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);

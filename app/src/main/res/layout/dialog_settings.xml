@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView style="@style/LabelText" android:text="Mode Tampilan" />
+    <RadioGroup
+        android:id="@+id/rgTheme"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="20dp">
+
+        <RadioButton android:id="@+id/rbThemeSystem" android:text="Ikuti Sistem HP"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:checked="true" />
+        <RadioButton android:id="@+id/rbThemeLight" android:text="Selalu Terang"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <RadioButton android:id="@+id/rbThemeDark" android:text="Selalu Gelap"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+    </RadioGroup>
+
+    <View style="@style/Divider" android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="☀️ Pengingat Ringkasan Pagi"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Switch
+            android:id="@+id/switchDigest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Notifikasi harian berisi ringkasan semua kegiatan hari itu."
+        android:textSize="11.5sp"
+        android:textColor="#8B8B9E"
+        android:layout_marginTop="2dp" />
+
+    <Button
+        android:id="@+id/btnDigestTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🕐 Jam 06:00"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="20dp"
+        style="?android:attr/buttonStyleSmall" />
+
+    <Button
+        android:id="@+id/btnSettingsClose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Selesai"
+        android:backgroundTint="#6C5CE7"
+        android:textColor="#FFFFFF" />
+
+</LinearLayout>

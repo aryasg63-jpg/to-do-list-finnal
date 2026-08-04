@@ -38,12 +38,25 @@ public class AlarmSoundService extends Service {
         String title = intent.getStringExtra(AlarmScheduler.EXTRA_TITLE);
         String soundUriStr = intent.getStringExtra(AlarmScheduler.EXTRA_SOUND_URI);
         boolean isPrep = intent.getBooleanExtra(AlarmScheduler.EXTRA_IS_PREP, false);
+        boolean isCustomReminder = intent.getBooleanExtra(AlarmScheduler.EXTRA_IS_CUSTOM_REMINDER, false);
+        String reminderLabel = intent.getStringExtra(AlarmScheduler.EXTRA_REMINDER_LABEL);
 
-        String label = isPrep ? "⏰ Bersiap-siap: " + title : "🔔 Waktunya mulai: " + title;
+        String notifTitle;
+        String notifBody;
+        if (isCustomReminder) {
+            notifTitle = (reminderLabel != null && !reminderLabel.isEmpty()) ? reminderLabel : "Pengingat!";
+            notifBody = title;
+        } else if (isPrep) {
+            notifTitle = "Bersiap-siap!";
+            notifBody = title;
+        } else {
+            notifTitle = "Waktunya Mulai!";
+            notifBody = title;
+        }
 
         Notification notif = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(isPrep ? "Bersiap-siap!" : "Waktunya Mulai!")
-                .setContentText(title)
+                .setContentTitle(notifTitle)
+                .setContentText(notifBody)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)

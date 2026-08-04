@@ -3,23 +3,346 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_screen">
+    android:background="?android:attr/colorBackground">
 
-    <FrameLayout
-        android:id="@+id/contentContainer"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@color/bottom_nav_bg"
-        app:itemIconTint="@color/nav_color"
-        app:itemTextColor="@color/nav_color"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="90dp">
+
+            <!-- Header dengan jam real-time -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#6C5CE7"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvLiveClock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="07:00:00"
+                            android:textColor="#FFFFFF"
+                            android:textSize="30sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvLiveDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Minggu, 2 Agustus 2026"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12.5sp"
+                            android:alpha="0.9" />
+                    </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/btnSettings"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:src="@android:drawable/ic_menu_preferences"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        app:tint="#FFFFFF" />
+                </LinearLayout>
+
+                <!-- Navigasi ke layar lain -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="14dp"
+                    android:weightSum="3">
+
+                    <LinearLayout
+                        android:id="@+id/btnNavCalendar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp">
+                        <TextView android:text="📅" android:textSize="18sp"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                        <TextView android:text="Kalender" android:textColor="#FFFFFF" android:textSize="11sp"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btnNavStats"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp">
+                        <TextView android:text="📊" android:textSize="18sp"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                        <TextView android:text="Statistik" android:textColor="#FFFFFF" android:textSize="11sp"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btnNavCategories"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp">
+                        <TextView android:text="🏷️" android:textSize="18sp"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                        <TextView android:text="Kategori" android:textColor="#FFFFFF" android:textSize="11sp"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Tugas berikutnya -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="#33FFFFFF"
+                    android:padding="12dp"
+                    android:layout_marginTop="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BERIKUTNYA"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:letterSpacing="0.1"
+                        android:alpha="0.85" />
+
+                    <TextView
+                        android:id="@+id/tvNextTask"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tidak ada tugas mendatang"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Progress harian -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="-18dp"
+                android:padding="16dp">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tvProgressLabel"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Progress Hari Ini"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvProgressPercent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0%"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#6C5CE7" />
+                        </LinearLayout>
+
+                        <ProgressBar
+                            android:id="@+id/progressToday"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"
+                            android:layout_marginTop="8dp"
+                            android:progressDrawable="@drawable/progress_rounded"
+                            android:max="100"
+                            android:progress="0" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <!-- Ringkasan waktu -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:weightSum="3">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="3dp">
+                    <LinearLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center" android:padding="12dp">
+                        <TextView android:id="@+id/tvCountTotal" android:text="0"
+                            android:textSize="18sp" android:textStyle="bold" android:textColor="#6C5CE7"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                        <TextView android:text="Hari Ini" android:textSize="10sp" android:textColor="#8B8B9E"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="3dp">
+                    <LinearLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center" android:padding="12dp">
+                        <TextView android:id="@+id/tvCountDone" android:text="0"
+                            android:textSize="18sp" android:textStyle="bold" android:textColor="#69DB7C"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                        <TextView android:text="Selesai" android:textSize="10sp" android:textColor="#8B8B9E"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="3dp">
+                    <LinearLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center" android:padding="12dp">
+                        <TextView android:id="@+id/tvTotalMinutes" android:text="0m"
+                            android:textSize="18sp" android:textStyle="bold" android:textColor="#FFA94D"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                        <TextView android:text="Estimasi" android:textSize="10sp" android:textColor="#8B8B9E"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <!-- Streak kebiasaan -->
+            <LinearLayout
+                android:id="@+id/layoutStreakSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔥 Kebiasaan Berjalan"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:padding="16dp"
+                    android:paddingBottom="6dp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:paddingStart="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/layoutStreakChips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- Filter kategori -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginTop="14dp"
+                android:paddingStart="16dp">
+
+                <LinearLayout
+                    android:id="@+id/layoutFilterChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kegiatan Hari Ini"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:padding="16dp"
+                android:paddingBottom="4dp" />
+
+            <!-- List tugas -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTasks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📝 Belum ada kegiatan hari ini.\nTap tombol + untuk menambahkan!"
+                android:textAlignment="center"
+                android:textColor="#8B8B9E"
+                android:padding="40dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAdd"
@@ -27,9 +350,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
-        android:layout_marginBottom="88dp"
-        android:src="@drawable/ic_add"
-        app:backgroundTint="@color/purple_primary"
-        app:tint="@color/white" />
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="#6C5CE7"
+        app:tint="#FFFFFF" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

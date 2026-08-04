@@ -2,15 +2,4 @@
     <color name="purple_primary">#6C5CE7</color>
     <color name="purple_dark">#5849C2</color>
     <color name="white">#FFFFFF</color>
-
-    <color name="bg_screen">#F5F4FF</color>
-    <color name="bg_card">#FFFFFF</color>
-    <color name="text_primary">#2D2A4A</color>
-    <color name="text_secondary">#8B8B9E</color>
-    <color name="divider">#ECEBFA</color>
-    <color name="chip_bg">#FFFFFF</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="bottom_nav_bg">#FFFFFF</color>
-    <color name="header_gradient_start">#6C5CE7</color>
-    <color name="header_gradient_end">#8E7CF0</color>
 </resources>

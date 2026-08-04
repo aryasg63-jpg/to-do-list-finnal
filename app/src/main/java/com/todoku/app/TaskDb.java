@@ -7,17 +7,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Database SQLite: tabel `tasks` + tabel `task_history` (riwayat penyelesaian utk statistik).
- */
 public class TaskDb extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "todoku.db";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 2;
     private static final String TBL = "tasks";
-    private static final String TBL_HIST = "task_history";
 
     public TaskDb(Context ctx) {
         super(ctx, DB_NAME, null, DB_VERSION);
@@ -25,11 +23,6 @@ public class TaskDb extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        createTasksTable(db);
-        createHistoryTable(db);
-    }
-
-    private static void createTasksTable(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + TBL + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "title TEXT NOT NULL," +
@@ -41,43 +34,39 @@ public class TaskDb extends SQLiteOpenHelper {
                 "soundUri TEXT," +
                 "done INTEGER DEFAULT 0," +
                 "estimatedMinutes INTEGER DEFAULT 0," +
-                "note TEXT DEFAULT ''," +
-                "repeatType TEXT DEFAULT 'none'," +
-                "repeatInterval INTEGER DEFAULT 1," +
-                "repeatWeekdays INTEGER DEFAULT 0" +
+                "priority INTEGER DEFAULT 1," +
+                "templateId INTEGER DEFAULT 0," +
+                "instanceDateEpochDay INTEGER DEFAULT 0" +
                 ")");
-    }
-
-    private static void createHistoryTable(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE " + TBL_HIST + " (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "taskId INTEGER NOT NULL," +
-                "title TEXT," +
-                "category TEXT," +
-                "doneAtMillis INTEGER NOT NULL," +
-                "instanceStartMillis INTEGER DEFAULT 0," +
-                "estimatedMinutes INTEGER DEFAULT 0" +
-                ")");
+        db.execSQL("CREATE INDEX idx_instance_date ON " + TBL + "(instanceDateEpochDay)");
+        db.execSQL("CREATE INDEX idx_template ON " + TBL + "(templateId)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldV, int newV) {
-        // Perbaiki skema DB dari versi lama / DB "rusak" tanpa menghapus data user.
-        // Setiap perintah dibuat idempotent + try/catch agar upgrade tidak pernah crash.
-        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN note TEXT DEFAULT ''");
-        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN repeatType TEXT DEFAULT 'none'");
-        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN repeatInterval INTEGER DEFAULT 1");
-        upgradeTable(db, "ALTER TABLE " + TBL + " ADD COLUMN repeatWeekdays INTEGER DEFAULT 0");
-        try { createHistoryTable(db); } catch (Exception ignored) { }
+        if (oldV < 2) {
+            db.execSQL("ALTER TABLE " + TBL + " ADD COLUMN priority INTEGER DEFAULT 1");
+            db.execSQL("ALTER TABLE " + TBL + " ADD COLUMN templateId INTEGER DEFAULT 0");
+            db.execSQL("ALTER TABLE " + TBL + " ADD COLUMN instanceDateEpochDay INTEGER DEFAULT 0");
+            // isi instanceDateEpochDay untuk data lama berdasarkan startTimeMillis yang sudah ada
+            Cursor c = db.rawQuery("SELECT id, startTimeMillis FROM " + TBL, null);
+            while (c.moveToNext()) {
+                long id = c.getLong(0);
+                long millis = c.getLong(1);
+                long epochDay = DateUtil.epochDayOf(millis);
+                db.execSQL("UPDATE " + TBL + " SET instanceDateEpochDay=? WHERE id=?",
+                        new Object[]{epochDay, id});
+            }
+            c.close();
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_instance_date ON " + TBL + "(instanceDateEpochDay)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_template ON " + TBL + "(templateId)");
+        }
     }
-
-    private static void upgradeTable(SQLiteDatabase db, String sql) {
-        try { db.execSQL(sql); } catch (Exception ignored) { }
-    }
-
-    // ================= CRUD tugas =================
 
     public long insertOrUpdate(Task t) {
+        if (t.instanceDateEpochDay == 0) {
+            t.instanceDateEpochDay = DateUtil.epochDayOf(t.startTimeMillis);
+        }
         SQLiteDatabase db = getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("title", t.title);
@@ -89,10 +78,9 @@ public class TaskDb extends SQLiteOpenHelper {
         cv.put("soundUri", t.soundUri);
         cv.put("done", t.done ? 1 : 0);
         cv.put("estimatedMinutes", t.estimatedMinutes);
-        cv.put("note", t.note);
-        cv.put("repeatType", t.repeatType);
-        cv.put("repeatInterval", t.repeatInterval);
-        cv.put("repeatWeekdays", t.repeatWeekdays);
+        cv.put("priority", t.priority);
+        cv.put("templateId", t.templateId);
+        cv.put("instanceDateEpochDay", t.instanceDateEpochDay);
 
         if (t.id == 0) {
             return db.insert(TBL, null, cv);
@@ -104,7 +92,6 @@ public class TaskDb extends SQLiteOpenHelper {
 
     public void delete(long id) {
         getWritableDatabase().delete(TBL, "id=?", new String[]{String.valueOf(id)});
-        getWritableDatabase().delete(TBL_HIST, "taskId=?", new String[]{String.valueOf(id)});
     }
 
     public void setDone(long id, boolean done) {
@@ -114,221 +101,155 @@ public class TaskDb extends SQLiteOpenHelper {
     }
 
     public Task getById(long id) {
-        List<Task> list = query(null, "id=?", new String[]{String.valueOf(id)}, null, null);
-        return list.isEmpty() ? null : list.get(0);
+        Cursor c = getReadableDatabase().query(TBL, null, "id=?", new String[]{String.valueOf(id)}, null, null, null);
+        Task t = null;
+        if (c.moveToFirst()) t = fromCursor(c);
+        c.close();
+        return t;
     }
 
-    /** Semua tugas, yang belum selesai di atas (urut waktu), yang selesai di bawah. */
     public List<Task> getAll() {
-        return query(null, null, null, "done ASC, startTimeMillis ASC", null);
-    }
-
-    /** Tugas yang masih aktif (belum selesai, atau berulang). */
-    public List<Task> getActiveTasks() {
-        return query(null, "(done=0 OR repeatType<>'none')", null, "startTimeMillis ASC", null);
-    }
-
-    /**
-     * Selesaikan satu instance tugas.
-     * - Non-repeat : done=true, alarm dibatalkan.
-     * - Repeat     : catat riwayat lalu majukan ke kemunculan berikutnya, done tetap false.
-     */
-    public void complete(Task t, boolean reschedule) {
-        recordCompletion(t);
-        if (t.isRepeating()) {
-            long next = t.nextOccurrenceFrom(t.startTimeMillis);
-            if (next > t.startTimeMillis) {
-                t.startTimeMillis = next;
-                t.done = false;
-                insertOrUpdate(t);
-                if (reschedule) AlarmScheduler.scheduleForTask(getContext(), t);
-            } else {
-                t.done = true;
-                insertOrUpdate(t);
-                if (reschedule) AlarmScheduler.cancelForTask(getContext(), t.id);
-            }
-        } else {
-            t.done = true;
-            insertOrUpdate(t);
-            if (reschedule) AlarmScheduler.cancelForTask(getContext(), t.id);
-        }
-    }
-
-    /** Batalkan penyelesaian (undo centang) untuk tugas sekali-pakai. */
-    public void uncomplete(Task t) {
-        if (t.isRepeating()) return;
-        t.done = false;
-        insertOrUpdate(t);
-        AlarmScheduler.scheduleForTask(getContext(), t);
-    }
-
-    /**
-     * Majukan tugas berulang yang sudah lama terlewat ke kemunculan berikutnya,
-     * agar tidak menumpuk "sudah lewat" di daftar.
-     */
-    public void rollForwardRepeating(Task t) {
-        if (!t.isRepeating() || t.done) return;
-        long now = System.currentTimeMillis();
-        if (t.startTimeMillis >= now - 6 * Task.HOUR_MS) return;
-        long next = t.firstOccurrenceOnOrAfter(now);
-        if (next > t.startTimeMillis) {
-            t.startTimeMillis = next;
-            insertOrUpdate(t);
-        }
-    }
-
-    /** Tugas yang muncul pada hari tertentu (untuk kalender). */
-    public List<Task> getTasksForDay(long dayStartMillis) {
-        List<Task> out = new ArrayList<>();
-        for (Task t : getAll()) {
-            if (t.occursOnDay(dayStartMillis)) out.add(t);
-        }
-        return out;
-    }
-
-    // ================= Riwayat & statistik =================
-
-    private void recordCompletion(Task t) {
-        ContentValues cv = new ContentValues();
-        cv.put("taskId", t.id);
-        cv.put("title", t.title);
-        cv.put("category", t.category);
-        cv.put("doneAtMillis", System.currentTimeMillis());
-        cv.put("instanceStartMillis", t.startTimeMillis);
-        cv.put("estimatedMinutes", t.estimatedMinutes);
-        getWritableDatabase().insert(TBL_HIST, null, cv);
-    }
-
-    /** Jumlah penyelesaian dalam rentang [from, to). */
-    public int countCompletionsBetween(long from, long to) {
-        int n = 0;
-        Cursor c = getReadableDatabase().rawQuery(
-                "SELECT COUNT(*) FROM " + TBL_HIST + " WHERE doneAtMillis >= ? AND doneAtMillis < ?",
-                new String[]{String.valueOf(from), String.valueOf(to)});
-        if (c.moveToFirst()) n = c.getInt(0);
-        c.close();
-        return n;
-    }
-
-    /** Penyelesaian per hari untuk `days` hari terakhir (indeks 0 = paling lama). */
-    public int[] completionsPerDay(long endExclusive, int days) {
-        int[] out = new int[days];
-        for (int i = 0; i < days; i++) {
-            long dayStart = endExclusive - (days - 1L - i) * Task.DAY_MS;
-            out[i] = countCompletionsBetween(dayStart, dayStart + Task.DAY_MS);
-        }
-        return out;
-    }
-
-    /** Total menit estimasi yang diselesaikan dalam rentang. */
-    public long totalCompletedMinutesBetween(long from, long to) {
-        long n = 0;
-        Cursor c = getReadableDatabase().rawQuery(
-                "SELECT SUM(estimatedMinutes) FROM " + TBL_HIST + " WHERE doneAtMillis >= ? AND doneAtMillis < ?",
-                new String[]{String.valueOf(from), String.valueOf(to)});
-        if (c.moveToFirst()) n = c.isNull(0) ? 0 : c.getLong(0);
-        c.close();
-        return n;
-    }
-
-    /** Pencacahan per kategori dalam rentang (kategori -> jumlah penyelesaian). */
-    public java.util.Map<String, Integer> completionsByCategoryBetween(long from, long to) {
-        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
-        Cursor c = getReadableDatabase().rawQuery(
-                "SELECT category, COUNT(*) FROM " + TBL_HIST + " WHERE doneAtMillis >= ? AND doneAtMillis < ? GROUP BY category",
-                new String[]{String.valueOf(from), String.valueOf(to)});
-        while (c.moveToNext()) {
-            map.put(c.getString(0), c.getInt(1));
-        }
-        c.close();
-        return map;
-    }
-
-    /** Rekap per kategori: total tugas (aktif) vs selesai. */
-    public java.util.Map<String, int[]> categoryTotals() {
-        java.util.Map<String, int[]> map = new java.util.LinkedHashMap<>();
-        Cursor c = getReadableDatabase().query(TBL, new String[]{"category", "COUNT(*)", "SUM(done)"},
-                null, null, "category", null, null);
-        while (c.moveToNext()) {
-            map.put(c.getString(0), new int[]{c.getInt(1), c.isNull(2) ? 0 : c.getInt(2)});
-        }
-        c.close();
-        return map;
-    }
-
-    /** Hari beruntun (streak) penyelesaian sampai hari ini. */
-    public int currentStreak() {
-        int streak = 0;
-        long day = Task.startOfDay(System.currentTimeMillis());
-        for (int i = 0; i < 365; i++) {
-            if (countCompletionsBetween(day, day + Task.DAY_MS) > 0) {
-                streak++;
-            } else if (i == 0) {
-                // hari ini belum ada penyelesaian — mulai hitung dari kemarin
-                i++;
-            } else {
-                break;
-            }
-            day -= Task.DAY_MS;
-        }
-        return streak;
-    }
-
-    // ================= Query umum =================
-
-    private List<Task> query(String[] columns, String selection, String[] args, String orderBy, String limit) {
         List<Task> list = new ArrayList<>();
-        Cursor c = getReadableDatabase().query(TBL, columns, selection, args, null, null, orderBy, limit);
+        Cursor c = getReadableDatabase().query(TBL, null, null, null, null, null, "startTimeMillis ASC");
         while (c.moveToNext()) list.add(fromCursor(c));
         c.close();
         return list;
     }
 
+    /** Tugas untuk satu tanggal spesifik — dipakai layar utama ("Hari Ini"). */
+    public List<Task> getForDate(long epochDay) {
+        List<Task> list = new ArrayList<>();
+        Cursor c = getReadableDatabase().query(TBL, null, "instanceDateEpochDay=?",
+                new String[]{String.valueOf(epochDay)}, null, null, "startTimeMillis ASC");
+        while (c.moveToNext()) list.add(fromCursor(c));
+        c.close();
+        return list;
+    }
+
+    /** Rentang tanggal (inklusif) — dipakai kalender mingguan. */
+    public List<Task> getForDateRange(long startDay, long endDay) {
+        List<Task> list = new ArrayList<>();
+        Cursor c = getReadableDatabase().query(TBL, null, "instanceDateEpochDay BETWEEN ? AND ?",
+                new String[]{String.valueOf(startDay), String.valueOf(endDay)}, null, null, "startTimeMillis ASC");
+        while (c.moveToNext()) list.add(fromCursor(c));
+        c.close();
+        return list;
+    }
+
+    public boolean existsForTemplateAndDate(long templateId, long epochDay) {
+        Cursor c = getReadableDatabase().rawQuery(
+                "SELECT 1 FROM " + TBL + " WHERE templateId=? AND instanceDateEpochDay=? LIMIT 1",
+                new String[]{String.valueOf(templateId), String.valueOf(epochDay)});
+        boolean exists = c.moveToFirst();
+        c.close();
+        return exists;
+    }
+
+    /** Riwayat kejadian dari satu template, terbaru dulu — dipakai hitung streak. */
+    public List<Task> getByTemplateDesc(long templateId, int limit) {
+        List<Task> list = new ArrayList<>();
+        Cursor c = getReadableDatabase().query(TBL, null, "templateId=?",
+                new String[]{String.valueOf(templateId)}, null, null,
+                "instanceDateEpochDay DESC", String.valueOf(limit));
+        while (c.moveToNext()) list.add(fromCursor(c));
+        c.close();
+        return list;
+    }
+
+    /** Dipanggil saat template diedit/dihapus: buang kejadian masa depan yang belum dikerjakan
+     *  (yang sudah selesai / masa lalu tetap disimpan untuk riwayat streak & statistik). */
+    public List<Task> getFutureUndoneByTemplate(long templateId, long fromEpochDayInclusive) {
+        List<Task> list = new ArrayList<>();
+        Cursor c = getReadableDatabase().query(TBL, null,
+                "templateId=? AND done=0 AND instanceDateEpochDay>=?",
+                new String[]{String.valueOf(templateId), String.valueOf(fromEpochDayInclusive)},
+                null, null, null);
+        while (c.moveToNext()) list.add(fromCursor(c));
+        c.close();
+        return list;
+    }
+
+    public void deleteFutureUndoneByTemplate(long templateId, long fromEpochDayInclusive) {
+        getWritableDatabase().delete(TBL,
+                "templateId=? AND done=0 AND instanceDateEpochDay>=?",
+                new String[]{String.valueOf(templateId), String.valueOf(fromEpochDayInclusive)});
+    }
+
+    public static class DayStat {
+        public long epochDay;
+        public int total;
+        public int done;
+    }
+
+    /** Jumlah tugas & yang selesai per hari, untuk grafik statistik. */
+    public List<DayStat> getDailyStats(long fromDay, long toDay) {
+        Map<Long, DayStat> map = new LinkedHashMap<>();
+        for (long d = fromDay; d <= toDay; d++) {
+            DayStat s = new DayStat();
+            s.epochDay = d;
+            map.put(d, s);
+        }
+        Cursor c = getReadableDatabase().rawQuery(
+                "SELECT instanceDateEpochDay, done, COUNT(*) FROM " + TBL +
+                        " WHERE instanceDateEpochDay BETWEEN ? AND ? GROUP BY instanceDateEpochDay, done",
+                new String[]{String.valueOf(fromDay), String.valueOf(toDay)});
+        while (c.moveToNext()) {
+            long day = c.getLong(0);
+            boolean isDone = c.getInt(1) == 1;
+            int count = c.getInt(2);
+            DayStat s = map.get(day);
+            if (s == null) continue;
+            s.total += count;
+            if (isDone) s.done += count;
+        }
+        c.close();
+        return new ArrayList<>(map.values());
+    }
+
+    public static class CategoryStat {
+        public String category;
+        public int total;
+        public int done;
+    }
+
+    /** Jumlah tugas & yang selesai per kategori dalam rentang tanggal, untuk grafik kategori. */
+    public List<CategoryStat> getCategoryStats(long fromDay, long toDay) {
+        Map<String, CategoryStat> map = new LinkedHashMap<>();
+        Cursor c = getReadableDatabase().rawQuery(
+                "SELECT category, done, COUNT(*) FROM " + TBL +
+                        " WHERE instanceDateEpochDay BETWEEN ? AND ? GROUP BY category, done",
+                new String[]{String.valueOf(fromDay), String.valueOf(toDay)});
+        while (c.moveToNext()) {
+            String cat = c.getString(0);
+            boolean isDone = c.getInt(1) == 1;
+            int count = c.getInt(2);
+            CategoryStat s = map.computeIfAbsent(cat, k -> {
+                CategoryStat ns = new CategoryStat();
+                ns.category = k;
+                return ns;
+            });
+            s.total += count;
+            if (isDone) s.done += count;
+        }
+        c.close();
+        return new ArrayList<>(map.values());
+    }
+
     private Task fromCursor(Cursor c) {
         Task t = new Task();
-        t.id = getLong(c, "id");
-        t.title = getStr(c, "title");
-        t.category = getStr(c, "category");
-        t.startTimeMillis = getLong(c, "startTimeMillis");
-        t.prepMinutesBefore = getInt(c, "prepMinutesBefore");
-        t.alarmEnabled = getInt(c, "alarmEnabled") == 1;
-        t.prepAlarmEnabled = getInt(c, "prepAlarmEnabled") == 1;
-        t.soundUri = getStr(c, "soundUri");
-        if (t.soundUri != null && t.soundUri.isEmpty()) t.soundUri = null;
-        t.done = getInt(c, "done") == 1;
-        t.estimatedMinutes = getInt(c, "estimatedMinutes");
-        t.note = getStr(c, "note");
-        t.repeatType = getStr(c, "repeatType");
-        t.repeatInterval = getInt(c, "repeatInterval");
-        t.repeatWeekdays = getInt(c, "repeatWeekdays");
+        t.id = c.getLong(c.getColumnIndexOrThrow("id"));
+        t.title = c.getString(c.getColumnIndexOrThrow("title"));
+        t.category = c.getString(c.getColumnIndexOrThrow("category"));
+        t.startTimeMillis = c.getLong(c.getColumnIndexOrThrow("startTimeMillis"));
+        t.prepMinutesBefore = c.getInt(c.getColumnIndexOrThrow("prepMinutesBefore"));
+        t.alarmEnabled = c.getInt(c.getColumnIndexOrThrow("alarmEnabled")) == 1;
+        t.prepAlarmEnabled = c.getInt(c.getColumnIndexOrThrow("prepAlarmEnabled")) == 1;
+        t.soundUri = c.getString(c.getColumnIndexOrThrow("soundUri"));
+        t.done = c.getInt(c.getColumnIndexOrThrow("done")) == 1;
+        t.estimatedMinutes = c.getInt(c.getColumnIndexOrThrow("estimatedMinutes"));
+        t.priority = c.getInt(c.getColumnIndexOrThrow("priority"));
+        t.templateId = c.getLong(c.getColumnIndexOrThrow("templateId"));
+        t.instanceDateEpochDay = c.getLong(c.getColumnIndexOrThrow("instanceDateEpochDay"));
         return t;
-    }
-
-    private static String getStr(Cursor c, String col) {
-        try {
-            int idx = c.getColumnIndexOrThrow(col);
-            String v = c.getString(idx);
-            return v == null ? "" : v;
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    private static int getInt(Cursor c, String col) {
-        try {
-            int idx = c.getColumnIndexOrThrow(col);
-            return c.getInt(idx);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    private static long getLong(Cursor c, String col) {
-        try {
-            int idx = c.getColumnIndexOrThrow(col);
-            return c.getLong(idx);
-        } catch (Exception e) {
-            return 0;
-        }
     }
 }
